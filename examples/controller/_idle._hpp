@@ -1,0 +1,23 @@
+/*! \file idle.hpp  
+ * \brief 
+ *
+ * \author matsuo@e-mail.jp
+ */
+#pragma once
+
+#ifndef IDLE_Hpp
+# define  IDLE_Hpp
+
+# include "signal_machine.hpp"
+
+class Idle : public SignalMachine::state_type {
+public:
+    Idle(SignalMachine::event_type id, const std::string& name, context_ptr ptr);
+    virtual ~Idle() = default;
+    void entry() noexcept override;
+    void doActivity() noexcept override;
+    SignalMachine::state_ptr exit(SignalMachine::event_type id) noexcept override;
+private:
+};
+
+#endif //<-- macro  IDLE_Hpp ends here.

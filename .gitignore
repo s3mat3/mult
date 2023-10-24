@@ -1,0 +1,90 @@
+.DS_Store
+node_modules
+dist
+package.json
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+system.log*
+query.log*
+log/*.log
+logs/*.log.*
+app.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+*~
+.cache
+# tags
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+TAGS
+# documents
+*/.asciidoctor
+main.adoc
+readme.adoc
+doc/html
+doc/doxygen_sqlite3.db
+doc/latex
+Doxyfile
+*/ed100-tester/images/*.png
+# Intermediate file
+*.i
+*.app
+*.moc
+*.obj
+*.o
+*.hex
+
+# lib
+*.dll
+*.so.*
+*.so
+*.a
+
+# executable
+a.out
+*.exe
+*.sln
+*.pyc
+
+# projects
+version.h
+build/
+dist/
+debug/
+Makefile-*
+.qmake.cache
+*.vcproj
+*.vcproj.*.user
+*.idb
+*.ncb
+*.suo
+.ccls_root
+.ccls-cache
+compile_commands.json
+# misc
+**/downloads/*.csv
+*/db/table/*.sql
+*/db/table/*.sh
+*/db/table/*.adoc
+*/db/backup/*.back.sql
+qk
+hw
+a.cpp
+bct/
+exp/
+.dir-locals.el
