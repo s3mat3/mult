@@ -49,7 +49,7 @@ target_include_directories(${TARGET}
 add_executable(${TARGET_PERFORMANCE}  ${TEST_TARGET_SOURCES_BASE}/measure.cpp)
 target_link_directories(${TARGET_PERFORMANCE}
   PUBLIC ${MULT_LIB_OUT_DIR}
-  PUBLIC "/opt/tools/lib"
+  PRIVATE ${benchmark_SOURCE_DIR}
   )
 #
 # link libraries このセクションは必ずadd_executableマクロの後ろに記述する必要有り

@@ -1,14 +1,55 @@
-###########################################################
-# usage cmake
-# -DCMAKE_BUILD_TYPE=(Debug | Release | Memcheck)
-# -DCMAKE_EXPORT_COMPILE_COMMANDS=on
-# -DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE
-# -DMAKE_MULT_TEST=1 we will compile code
-# -DMAKE_MULT_EXAMPLE=1 we will compile example code
-# -DMAKE_MULT_DOC=1 we will generate source document
-#############################################################
+#[[
+ usage cmake
+ -DCMAKE_BUILD_TYPE=(Debug | Release | Memcheck)
+ -DCMAKE_EXPORT_COMPILE_COMMANDS=on
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE
+ -DMULT_BUILD_TEST=ON (default OFF) we will compile code
+ -DMULT_BUILD_EXAMPLES=ON (default ON) we will compile example code
+ -DMULT_BUILD_DOC=ON (default OFF) we will generate source document
+]]
 cmake_minimum_required (VERSION 3.14)
-project("Mult" CXX)
+file(READ VERSION MULT_VERSION_STRING)
+string(STRIP ${MULT_VERSION_STRING} MULT_VERSION_STRING)
+
+project(
+  mult
+  VERSION ${MULT_VERSION_STRING}
+  LANGUAGES CXX
+  )
+
+option(MULT_BUILD_TEST "Build test" OFF)
+option(MULT_BUILD_BENCHMARK "Build benchmark test (with MULT_BUILD_TEST)" OFF)
+option(MULT_BUILD_EXAMPLES "Build examples" ON)
+option(MULT_BUILD_DOC "Build documents" OFF)
+
+if (MULT_BUILD_TEST)
+  include(CTest)
+  include(FetchContent)
+  FetchContent_Declare(
+    doctest
+    GIT_REPOSITORY https://github.com/doctest/doctest.git
+    GIT_TAG master
+    )
+  if (MULT_BUILD_BENCHMARK)
+    FetchContent_Declare(
+      benchmark
+      GIT_REPOSITORY https://github.com/google/benchmark.git
+      GIT_TAG main
+      )
+    set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
+    FetchContent_MakeAvailable(doctest benchmark)
+    include_directories(${doctest_SOURCE_DIR}/doctest
+      ${benchmark_SOURCE_DIR}/include/benchmark)
+    set(TOOLS_BENCHMARK_NAME "benchmark")
+    # set(TOOLS_BENCHMARK_BASE "/opt/tools")
+  else ()
+    FetchContent_MakeAvailable(doctest)
+    include_directories(${doctest_SOURCE_DIR}/doctest)
+    set(TOOLS_TESTER_NAME "doctest")
+    set(TOOLS_TESTER_BASE ${doctest_SOURCE_DIR}/doctest/${TOOLS_TESTER_NAME})
+  endif()
+endif()
+
 set(TARGET_BASE "mult-base")
 set(MULT_BASE_LIB ${TARGET_BASE})
 if (NOT (DEFINED PROJ_VERSION))
@@ -37,10 +78,6 @@ if (NOT (DEFINED MULT_BASE_DIR))
   set(MULT_SOURCE_BASE  ${MULT_BASE_DIR}/src)
   set(MULT_INTERNAL     ${MULT_INCLUDE_BASE}/internal)
   set(MULT_DOC_ROOT     ${MULT_BASE_DIR}/doc-root)
-  set(TOOLS_TESTER_NAME "doctest")
-  set(TOOLS_TESTER_BASE ${MULT_3RD_BASE}/doctest/${TOOLS_TESTER_NAME})
-  set(TOOLS_BENCHMARK_NAME "benchmark")
-  set(TOOLS_BENCHMARK_BASE "/opt/tools")
   ## compile options
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -60,7 +97,7 @@ endif()
 
 set(LIBRARY_OUTPUT_PATH ${MULT_LIB_OUT_DIR})
 
-if (MAKE_MULT_TEST)
+if (MULT_BUILD_TEST)
   enable_testing()
   if (NOT (DEFINED MULT_TEST_BASE))
     set(MULT_TEST_BASE ${MULT_BASE_DIR}/tests)
@@ -70,12 +107,11 @@ if (MAKE_MULT_TEST)
     set(MULT_TEST_OUT_DIR ${PROJECT_BINARY_DIR}/mult/tests)
   endif()
 
-  # add_subdirectory(${MULT_TEST_BASE}/byte_array)
   add_subdirectory(${MULT_TEST_BASE}/buffer)
   add_subdirectory(${MULT_TEST_BASE}/measure_time)
 endif()
 
-if (MAKE_MULT_EXAMPLE)
+if (MULT_BUILD_EXAMPLES)
   find_program(TOOL_MEMORY_CHECKER "valgrind")
   if (TOOL_MEMORY_CHECKER)
     set(TOOL_THREAD_CHECKER ${TOOL_MEMORY_CHECKER})
