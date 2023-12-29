@@ -17,13 +17,97 @@
 
 # include <cxxabi.h>
 # include <array>
+# include <chrono>
 # include <iostream>
+# include <mutex>
+# include <sstream>
 # include <string>
 # include <stdexcept>
+# include <thread>
+# include <type_traits>
+
 # include "mult.hpp"
+# include "util.hpp"
+
+// for simple test macro
+static inline std::mutex mult_test_locker_;
+# define MULT_TEST_BEGIN(func,...) void func(__VA_ARGS__) {     \
+    const char* mult_test_function_name_ = #func;               \
+    {                                                           \
+        std::lock_guard<std::mutex> lock(mult_test_locker_);    \
+        std::clog << MULT_SGR_BOLD                              \
+                  << "===== TEST "                              \
+                  << mult_test_function_name_                   \
+                  << " BEGIN ====="                             \
+                  << MULT_SGR_RESET                             \
+                  << std::endl;                                 \
+    }
+
+# define MULT_TEST_END     {                                    \
+        std::lock_guard<std::mutex> lock(mult_test_locker_);    \
+        std::clog << MULT_SGR_BOLD                              \
+                  << "===== TEST "                              \
+                  << mult_test_function_name_                   \
+                  << " END ====="                               \
+                  << MULT_SGR_RESET                             \
+                  << std::endl;                                 \
+    }}
+
+# if defined (MULT_ASSERT_CHECK) && !defined (MULT_DEBUG_DISABLE)
+#define MULT_ASSERT(cond, msg, flg)                                     \
+    do {                                                                \
+        const char* cnd = #cond;                                        \
+        if (!(cond)) {                                                  \
+                Mult::Debug::assertion(cnd, msg, flg, Mult::removePath(__FILE__), __PRETTY_FUNCTION__, __LINE__); \
+        } else {                                                        \
+            Mult::Debug::assertion_ok(cnd, Mult::removePath(__FILE__), __PRETTY_FUNCTION__, __LINE__); \
+        }                                                               \
+    } while (0)
+# else
+#  define MULT_ASSERT(cond, msg, flg)
+# endif
+
+# if !defined (MULT_LOG_DISABLE)
+#  define MARK() Mult::Debug::out_message(Mult::Debug::mark(Mult::removePath(__FILE__), __LINE__ ))
+#  define VAR_DUMP(v) Mult::Debug::dump_str((#v), v)
+#  define MULT_FATAL(msg) Mult::Debug::out_message(Mult::Debug::build_log_message(msg, Mult::removePath(__FILE__), __LINE__,0))
+#  define MULT_ERROR(msg) Mult::Debug::out_message(Mult::Debug::build_log_message(msg, Mult::removePath(__FILE__), __LINE__,1))
+#  define MULT_WARN(msg) Mult::Debug::out_message(Mult::Debug::build_log_message(msg, Mult::removePath(__FILE__), __LINE__,2))
+#  define MULT_NOTICE(msg) Mult::Debug::out_message(Mult::Debug::build_log_message(msg, Mult::removePath(__FILE__), __LINE__, 3))
+#  define MULT_INFO(msg) Mult::Debug::out_message(Mult::Debug::build_log_message(msg, Mult::removePath(__FILE__), __LINE__, 4))
+#  define MULT_LOG(msg) Mult::Debug::out_message(Mult::Debug::build_log_message(msg, Mult::removePath(__FILE__), __LINE__, 5))
+# else
+#  define MARK()
+#  define VAR_DUMP(v)
+#  define MULT_FATAL(msg)
+#  define MULT_ERROR(msg)
+#  define MULT_WARN(msg)
+#  define MULT_NOTICE(msg)
+#  define MULT_INFO(msg)
+#  define MULT_LOG(msg)
+# endif
+
+# if defined (MULT_TRACE) && !defined (MULT_DEBUG_DISABLE)
+#  define TRACE(msg) Mult::Debug::out_message(Mult::Debug::trace(msg, __PRETTY_FUNCTION__, __LINE__))
+#  define TYPE(var) Mult::Debug::type(var)
+#  define MSG(msg) Mult::Debug::out_message(Mult::Debug::message(msg, __LINE__))
+#  define TEXT(v) (#v)
+#  define DUMP(v) Mult::Debug::dump(TEXT(v), v)
+//#  define DUMP(v) std::clog << MULT_SGR_BOLD << MULT_SGR_CYAN << TEXT(v) << " => " << Mult::Debug::dump_var_simple(v) << MULT_SGR_RESET << std::endl
+#  define PTR_GAP(ptop,pend) Mult::Debug::out_message(Mult::Debug::size_gap(ptop, pend, #pend, #ptop, false))
+//#  define PTR_GAP(ptop,pend) std::clog << #pend << " - " << #ptop << " => "<< Mult::Debug::size_gap(ptop, pend, #pend, #ptop, false) << std::endl
+# else
+#  define TRACE(msg)
+#  define TYPE(var)
+#  define MSG(msg)
+#  define TEXT(v)
+#  define DUMP(v)
+#  define PTR_GAP(ptop,pend)
+# endif
 
 namespace Mult {
     namespace Debug {
+        std::string toReadableCtrlCode(const std::string& s);
         /** Type name demangling .
          *
          * Usage
@@ -41,7 +125,383 @@ namespace Mult {
             //////////////////////////////////////////////////
             return y;
         }
+        /// for test squence data generate
+        // template <typename T, size_type N>
+        // struct gen
+        // {
+        //     T data[N];
+        //     constexpr gen() : data()
+        //     {
+        //         for ()
+        //     }
+        // };
+        // is_string
+        template <typename T>
+        struct is_string {static constexpr bool value = false;};
+        template <>
+        struct is_string<std::string> {static constexpr bool value = true;};
+        template <typename T>
+        constexpr bool is_string_v = is_string<T>::value;
+        // is_string_view
+        template <typename T>
+        struct is_string_view {static constexpr bool value = false;};
+        template <>
+        struct is_string_view<std::string_view> {static constexpr bool value = true;};
+        template <typename T>
+        constexpr bool is_string_view_v = is_string_view<T>::value;
+        //
+        template <typename T>
+        using is_c_string = std::disjunction<
+            std::is_same<typename std::decay<T>::type, char*>
+            , std::is_same<typename std::decay<T>::type, char const*>
+            , std::is_same<typename std::decay<T>::type, signed char*>
+            , std::is_same<typename std::decay<T>::type, signed char const*>
+            , std::is_same<typename std::decay<T>::type, unsigned char*>
+            , std::is_same<typename std::decay<T>::type, unsigned char const*>
+            >;
 
+        // has_to_string
+        struct has_to_string_impl
+        {
+            template <class C>
+            static std::true_type check(decltype(&C::to_string));
+            template <class C>
+            static std::false_type check(...);
+        };
+        template <class C>
+        class has_to_string : public decltype(has_to_string_impl::check<C>(nullptr)) {};
+
+        template <typename T>
+        using is_direct_out = std::disjunction<
+            is_string<T>
+            ,is_string_view<T>
+            >;
+
+        template <typename T>
+        using is_use_std_to_string = std::disjunction<
+            std::is_integral<T>
+            ,std::is_floating_point<T>
+            >;
+        /** Dump variable (simple) .
+         *
+         *  template function
+         *  only int,float,double, std::string, char*
+         *
+         *  \tparam T variable type
+         *  \param[in] v dump target
+         *  \retval string from variable value.
+         */
+        template <typename T>
+        std::string dump_var_simple(T v)
+        {
+            if constexpr (is_string_v<T>) {
+                return v;
+            }
+            else if constexpr (is_string_view_v<T>) {
+                return std::string(v);
+            }
+            else if constexpr (is_use_std_to_string<T>::value) {
+                return std::to_string(v);
+            }
+            else if constexpr (std::is_pointer_v<T>) {
+                if constexpr (is_c_string<T>::value) {
+                    return toReadableCtrlCode(v);
+                }
+                std::stringstream ss;
+                ss << v;
+                return dump_var_simple(*v) + " @" + ss.str();
+            }
+            else if constexpr (std::is_class_v<T>) {
+                if constexpr (has_to_string<T>::value) {
+                    return v.to_string();
+                }
+                std::string str{"class: "};
+                str += demangle(typeid(decltype(v)).name());
+                return str;
+            }
+            else {
+                return std::string {"unknown"};
+            }
+            return std::string {"Mmmmmm-----"};
+        } //<-- function dump_var_simple ends here.
+
+
+        static inline std::mutex clog_locker_global;
+        inline  auto out_message(const std::string& msg) -> void
+        {
+            std::lock_guard<std::mutex> lock(clog_locker_global);
+            std::clog << msg << std::endl;
+        }
+
+        template <typename T>
+        inline auto dump_str(const char* v, T t) -> std::string
+        {
+            std::string message{MULT_SGR_BOLD};
+            message += MULT_SGR_CYAN;// << TEXT(v) << " => " << Mult::Debug::dump_var_simple(v) << MULT_SGR_RESET << std::endl
+            message += v;
+            message += " => ";
+            message += dump_var_simple(t);
+            message += MULT_SGR_RESET;
+            return message;
+        }
+
+        template <typename T>
+        inline auto dump(const char* v, T t) -> void
+        {
+            out_message(dump_str(v, t));
+        }
+
+        /** Perfomance checker .
+         *
+         *  \tparam F perfomance check taget function
+         *  \tparam Args taget function's argument(s)
+         *  \param[in] rep number of loop iteration
+         *  \param[in] f target function
+         *  \param[in] args target function's argument (if use)
+         *  \retval sec in micro seconds
+         */
+        template <typename F, typename...Args>
+        inline auto performance(size_t rep, size_t count, F f, Args...args)
+        {
+            using namespace std::chrono;
+            using timer = high_resolution_clock;
+            auto n = timer::now();
+            auto x = duration_cast<nanoseconds>(n - n).count();
+            for (decltype(rep) c = 0; c < count; ++c) {
+                auto start = timer::now();
+                for (decltype(rep) i = 0; i < rep; i++) {
+                    f(args...);
+                }
+                auto stop = timer::now();
+                x += duration_cast<nanoseconds>(stop - start).count();
+            }
+            auto diff = x / count;
+            std::string message{MULT_SGR_BOLD};
+            std::clog << MULT_SGR_BOLD << MULT_SGR_RED
+                      << "total : "
+                      << diff
+                      << " avg. "
+                      << diff / rep
+                      << " in [ns]"
+                      << MULT_SGR_RESET << std::endl;
+            return diff;
+        }
+        class mult_assert : public std::exception {
+        public:
+            explicit mult_assert(std::string r) : m_reason(std::move(r)) {}
+            virtual auto what() const noexcept(true) -> const char* override
+            {
+                return m_reason.c_str();
+            }
+        private:
+            std::string m_reason;
+        };
+
+        /** Occure abort or exception when call this function.
+         *
+         *  All parameter(s) will comes from macro named MultASERT.
+         *
+         *  \param[in] cond Assertion condition code
+         *  \param[in] extend extend message
+         *  \param[in] noExcept flag for throw exception of abort when assertion occurred
+         *  \param[in] file name of occurred file
+         *  \param[in] function name of occurred function
+         *  \param[in] line number of occurred line
+         */
+        inline void assertion(const char* cond, const char* extend, bool noExcept, const std::string_view& file, const char* function, int line)
+        {
+            std::string message{MULT_SGR_BOLD};
+            message += MULT_SGR_RED;
+            message += "Mult assertion occurred: ";
+            message += cond;
+            message += "  [[";
+            message += extend;
+            message += "]]\n\t";
+            message += MULT_SGR_YELLOW;
+            message += "function=> ";
+            message += function;
+            message += "\n\tin ";
+            message += std::string(file.begin(), file.end());
+            message += " at ";
+            message += std::to_string(line);
+            message += MULT_SGR_RESET;
+            if (noExcept) {
+                out_message(message);
+                abort();
+            } else {
+                throw mult_assert(message.c_str());
+            }
+        } //<-- function assertion ends here.
+        inline auto assertion_ok(const char* cond, const std::string_view& file, const char* function, int line)
+        {
+# if defined (MULT_ASSERT_CHECK) && (MULT_ASSERT_OK)
+            std::string message{MULT_SGR_BOLD};
+            message += MULT_SGR_YELLOW;
+            message += "PASS ";
+            message += "  [[";
+            message += cond;
+            message += "]] ";
+            message += "function=> ";
+            message += function;
+            message += " in ";
+            message += std::string(file.begin(), file.end());
+            message += " at ";
+            message += std::to_string(line);
+            message += MULT_SGR_RESET;
+            out_message(message);
+# else
+            MULT_UNUSED_ARG(cond); MULT_UNUSED_ARG(file); MULT_UNUSED_ARG(function); MULT_UNUSED_ARG(line);
+#  endif
+        }
+
+        /** Trace .
+         *
+         *  All parameter(s) will comes from macro named TRACE when set MULT_TRACE_FUNCTION.
+         *
+         */
+        inline auto trace(const char* msg, const char* name, int line) -> const std::string
+        {
+            std::string message{MULT_SGR_BOLD};
+            message += MULT_SGR_GREEN;
+            message += "====> ";
+            message += msg;
+            message += "\n function is ";
+            message +=  MULT_SGR_CYAN;
+            message += name;
+            message +=  MULT_SGR_RESET;
+            message += " ";
+            message += std::to_string(line);
+            return message;
+        }
+        /**  .
+         *
+         *
+         */
+        inline auto message(const char* msg, int line) -> const std::string
+        {
+            std::string mesg{MULT_SGR_BOLD};
+            mesg += MULT_SGR_GREEN;
+            mesg += "===> ";
+            mesg += msg;
+            mesg += "===> ";
+            mesg += std::to_string(line);
+            mesg += MULT_SGR_RESET;
+            return mesg;
+        }
+        static constexpr std::array<char[12],8> LogLevelNameList = {
+            " [Fatal ]: ",
+            " [Error ]: ",
+            " [Warn  ]: ",
+            " [Notice]: ",
+            " [Info  ]: ",
+            " [Debug ]: ",
+        };
+        inline auto build_log_message(const std::string& body, const std::string_view& fname, int line, int lv = 5) -> const std::string
+        {
+            auto  color = MULT_SGR_RED;
+            switch (lv) {
+            case 0:       // fatal red
+            case 1: break;// Error red
+            case 2:        // Warn yellow
+            case 3: color = MULT_SGR_YELLOW; break; // Notice yellow
+            case 4: // Info cyan
+            case 5: color = MULT_SGR_CYAN; break; // debug cyan
+            default: lv = 5; color = MULT_SGR_CYAN; break; // 
+            }
+            std::stringstream ss;
+            ss << MULT_SGR_BOLD
+               << color
+               << LogLevelNameList[lv]
+               << Mult::convertTime_tToStr(Mult::getElapsedTime())
+               << " ("
+               << std::this_thread::get_id()
+               << ") "
+               << body
+               << " in "
+               << fname
+               << " at "
+               << std::to_string(line)
+               << MULT_SGR_RESET
+               << std::endl;
+            return ss.str();
+        }
+        inline auto message(const std::string& body, const std::string_view& fname, int line)
+        {
+            std::clog << MULT_SGR_BOLD << MULT_SGR_BLUE
+                      << Mult::convertTime_tToStr(Mult::getElapsedTime())
+                      << " ["
+                      << std::this_thread::get_id()
+                      << "] "
+                      << body
+                      << " in "
+                      << fname
+                      << " at "
+                      << std::to_string(line)
+                      << MULT_SGR_RESET
+                      << std::endl;
+        }
+        /** Marker .
+         *
+         *  All parameter(s) will comes from macro named MARK when set MULT_TRACE_FUNCTION.
+         *
+         */
+        inline  auto mark(const std::string_view& file, int line)
+        {
+            std::stringstream ss;
+            ss << MULT_SGR_BOLD
+               << Mult::getCurrentTime()
+               << " ***** mark ====> "
+               << " in "
+               << file
+               << " at "
+               << std::to_string(line)
+               << " <==== marK *****"
+               << std::endl;
+            return ss.str();
+        }
+        /**  .
+         *
+         *
+         */
+        template <typename T>
+        auto size_gap(T head, T tail, const char* hvar, const char* tvar, bool disp = true) -> const std::string
+        {
+            decltype(head) h = nullptr;
+            decltype(head) t = nullptr;
+            size_t sz = 0;
+            if constexpr (std::is_pointer_v<T>) {
+                h = head;
+                t = tail;
+                sz = sizeof(std::remove_pointer_t<T>);
+            } else {
+                h = std::addressof(head);
+                t = std::addressof(tail);
+                sz = sizeof(T);
+            }
+            auto gap = t - h;
+            auto gap_byte = reinterpret_cast<char*>(t) - reinterpret_cast<char*>(h);
+            std::stringstream os;
+            os << MULT_SGR_BOLD
+               << MULT_SGR_GREEN
+               << "====> "
+               << tvar
+               << " to "
+               << hvar
+               << " gap is "
+               << gap_byte
+               << " byte / "
+               << gap
+               << " objects "
+               << MULT_SGR_CYAN
+               << " @object size is (including padding) "
+               << sz
+               << MULT_SGR_GREEN
+               << " <===="
+               << MULT_SGR_RESET;
+            if (disp)
+                std::clog << os.str() << std::endl;
+            return os.str();
+        }
         static constexpr std::array<char[6], 8 * 20> ctrlCharTbl = {
             "[NUL]","[SOH]","[STX]","[ETX]","[EOT]","[ENQ]","[ACK]","[BEL]",
             // "[NUL]","[01H]","[STX]","[ETX]","[04H]","[05H]","[ACK]","[07H]", //  1
@@ -130,71 +590,8 @@ namespace Mult {
             }
             return t;
         } //<--  function hexDump ends here.
-        /** Helper .
-         *
-         *
-         */
-        static void assertion(const char* cond, const char* extend, bool noExcept, const char* file, const char* function, int line)
-        {
-            std::string message{MULT_SGR_BOLD};
-            message += MULT_SGR_RED;
-            message += "Mult assertion occurred: ";
-            message += cond;
-            message += "  [[";
-            message += extend;
-            message += "]]\n\t";
-            message += MULT_SGR_BLUE;
-            message += "function=> ";
-            message += function;
-            message += "\n\tin ";
-            message += file;
-            message += " at ";
-            message += line;
-            message += MULT_SGR_RESET;
-            if (noExcept) {
-                std::cout << MULT_SGR_RED
-                          << "%%%%%%%%%%%%%%%%%%%%\n\n"
-                          << MULT_SGR_RESET
-                          << message
-                          << "\n"
-                          << MULT_SGR_RESET
-                          << MULT_SGR_RED
-                          << "%%%%%%%%%%%%%%%%%%%%"
-                          << MULT_SGR_RESET
-                          << std::endl;
-                abort();
-            } else {
-                throw std::logic_error(message.c_str());
-            }
-        }
     } //<-- namespace Debug ends here.
 } //<-- namespace Mult ends here.
 
-# if defined (MULT_CHECK)
-#  define MultASSERT(cond, msg, flg)                  \
-    if (!(cond)) Mult::Debug::assertion(#cond, msg, flg, __FILE__, __PRETTY_FUNCTION__, __LINE__) else (void)0
-# else
-#  define MultASSERT(cond, msg, flg) 
-# endif
-
-# if defined (MULT_TRACE_FUNCTION)
-#  include <iostream>
-#  define TRACE(msg)           \
-    std::cout << MULT_SGR_BOLD \
-    << MULT_SGR_GREEN          \
-    << "====> "                \
-    << msg                     \
-    << "\n\t\tfunction is -> " \
-    << MULT_SGR_CYAN           \
-    <<__PRETTY_FUNCTION__      \
-    << MULT_SGR_RESET          \
-    << " "                     \
-    << __LINE__                \
-    << std::endl
-#  define MARK() std::cout << "***** mark ====> " << __LINE__ << " <==== marK *****" << std::endl
-# else
-#  define TRACE(msg)
-#  define MARK()
-# endif
 
 #endif //<-- macro  MULT_DEBUG_Hpp ends here.

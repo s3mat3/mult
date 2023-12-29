@@ -7,7 +7,7 @@
  -DMULT_BUILD_EXAMPLES=ON (default ON) we will compile example code
  -DMULT_BUILD_DOC=ON (default OFF) we will generate source document
 ]]
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.24)
 file(READ VERSION MULT_VERSION_STRING)
 string(STRIP ${MULT_VERSION_STRING} MULT_VERSION_STRING)
 
@@ -79,14 +79,17 @@ if (NOT (DEFINED MULT_BASE_DIR))
   set(MULT_INTERNAL     ${MULT_INCLUDE_BASE}/internal)
   set(MULT_DOC_ROOT     ${MULT_BASE_DIR}/doc-root)
   ## compile options
-  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD 20)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
-  ## list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -pthread -lrt -fpic -pedantic -Wall -W -Wctor-dtor-privacy -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual ${CMAKE_CXX_FLAGS}")
+  # list(APPEND CMAKE_CXX_FLAGS "-fpic -pedantic -Wall -W -Wctor-dtor-privacy -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual ${CMAKE_CXX_FLAGS}")
   # debug or release
-  set(CMAKE_CXX_FLAGS_MEMCHECK "-O0 -g3 -DTRACE_FUNCTION")
-  set(CMAKE_CXX_FLAGS_DEBUG    "-O2 -g3 -DTRACE_FUNCTION")
-  set(CMAKE_CXX_FLAGS_RELEASE  "-DNDEBUG -O2")
+  # set(CMAKE_CXX_FLAGS_MEMCHECK "-Og -g3")
+  # set(CMAKE_CXX_FLAGS_DEBUG    "-O2 -g3")
+  # set(CMAKE_CXX_FLAGS_RELEASE  "-DNDEBUG -O2")
+  set(CMAKE_CXX_FLAGS_MEMCHECK " ")
+  set(CMAKE_CXX_FLAGS_DEBUG    " ")
+  set(CMAKE_CXX_FLAGS_RELEASE  " ")
 else()
   set(MULT_DOC_OUT_DIR "${PROJECT_BINARY_DIR}/Mult/doc")
 endif()
@@ -107,8 +110,10 @@ if (MULT_BUILD_TEST)
     set(MULT_TEST_OUT_DIR ${PROJECT_BINARY_DIR}/mult/tests)
   endif()
 
+  # add_subdirectory(${MULT_TEST_BASE}/measure_time)
+  add_subdirectory(${MULT_TEST_BASE}/result)
+  add_subdirectory(${MULT_TEST_BASE}/storage)
   add_subdirectory(${MULT_TEST_BASE}/buffer)
-  add_subdirectory(${MULT_TEST_BASE}/measure_time)
 endif()
 
 if (MULT_BUILD_EXAMPLES)
@@ -131,13 +136,13 @@ if (MULT_BUILD_EXAMPLES)
     set(MULT_EXAMPLE_BASE ${MULT_BASE_DIR}/examples)
   endif()
   # examples output directories
-  if(NOT (DEFINED MULT_EXAMPLE_OUT_DIR))
-    set(MULT_EXAMPLE_OUT_DIR ${PROJECT_BINARY_DIR}/mult/examples)
-  endif()
-  add_subdirectory(${MULT_EXAMPLE_BASE}/controller)
-  add_subdirectory(${MULT_EXAMPLE_BASE}/logger)
-  add_subdirectory(${MULT_EXAMPLE_BASE}/notification)
-  add_subdirectory(${MULT_EXAMPLE_BASE}/thread)
+  # if(NOT (DEFINED MULT_EXAMPLE_OUT_DIR))
+  #   set(MULT_EXAMPLE_OUT_DIR ${PROJECT_BINARY_DIR}/mult/examples)
+  # endif()
+  # add_subdirectory(${MULT_EXAMPLE_BASE}/controller)
+  # add_subdirectory(${MULT_EXAMPLE_BASE}/logger)
+  # add_subdirectory(${MULT_EXAMPLE_BASE}/notification)
+  # add_subdirectory(${MULT_EXAMPLE_BASE}/thread)
 endif()
 ##############
 ### documents
@@ -158,10 +163,15 @@ add_library(${MULT_BASE_LIB}
   )
 
 target_include_directories(${MULT_BASE_LIB}
-  PUBLIC
+  PRIVATE
   ${MULT_INCLUDE_BASE}
   )
 
 target_link_libraries(${MULT_BASE_LIB}
   PUBLIC "-pthread"
   )
+target_compile_options(${MULT_BASE_LIB}
+  PRIVATE -Wall -W -Wctor-dtor-privacy -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual
+  )
+target_compile_features(${MULT_BASE_LIB} PRIVATE cxx_std_20)
+

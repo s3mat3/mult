@@ -35,7 +35,7 @@
 # define MULT_SGR_WHITE   "\e[37m"
 
 
-
+# define MULT_UNUSED_ARG(x) static_cast<void>(x)
 
 
 # define MULT_NAMESPACE_BEGIN namespace Mult {
@@ -56,7 +56,8 @@ namespace Mult {
     using millisec_interval = time_interval; //!< ミリ秒 2^31=2147483648[ms]で約2147483[s]で約596時間で約24日が最大となる
     using seconds_interval  = time_interval; //!< 秒 2^31=2147483648[s]で約596523時間で約24855日が最大となる
     using name_type         = std::string;
-    
+
+    using namespace std::literals::string_literals;
     /*! maximum value of index_t */
     constexpr index_type max_index() {return std::numeric_limits<index_type>::max();}
     /*! minimum value of index_t */
