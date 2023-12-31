@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-#include "logger.hpp"
+#include "debug.hpp"
 #include "notification.hpp"
 #include "thread.hpp"
 
@@ -32,7 +32,7 @@ public:
         while(run) {
             std::string hello(__FUNCTION__);
             hello.append(std::to_string(l++));
-            DebugLog("notify " +  hello);
+            MULT_LOG("notify " +  hello);
             aaa.notify(l);
             bbb.notify(hello);
             Mult::Thread::sleep(100);
@@ -57,7 +57,7 @@ public:
         size_t l = 0;
         while(run) {
             std::string hello(__FUNCTION__);
-            DebugLog("Hello " +  hello + std::to_string(l++));
+            MULT_LOG("Hello " +  hello + std::to_string(l++));
             Mult::Thread::sleep(100);
             if (l > 20) break;
         }
@@ -66,13 +66,13 @@ public:
     int function2(int a)
     {
         std::string x = std::to_string(a) + " get from Caller";
-        DebugLog(x);
+        MULT_LOG(x);
         return a;
     }
 
     int function3(std::string a)
     {
-        DebugLog(a);
+        MULT_LOG(a);
         return 0;
     }
 public:
@@ -82,10 +82,7 @@ private:
 
 int main()
 {
-    MULTLoggerInternalLevel(Mult::LogLevel::debug);
-    MULTLoggerLevel(Mult::LogLevel::debug);
     using runnable_t = Mult::RunnableAdapter<SomeCaller>;
-    using runnable_p = std::shared_ptr<runnable_t>();
     // setup caller Thread
     auto caller = std::make_shared<SomeCaller>();
     auto runner1 = std::make_shared<runnable_t>(caller, &SomeCaller::function1);

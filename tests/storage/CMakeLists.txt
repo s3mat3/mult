@@ -35,7 +35,7 @@ target_link_libraries(${TARGET}
 target_include_directories(${TARGET}
   PRIVATE ${TEST_SOURCES_BASE}
   PRIVATE ${TOOLS_TESTER_BASE}
-  PUBLIC  ${MULT_INCLUDE_BASE}
+  PRIVATE  ${MULT_INCLUDE_BASE}
   )
 target_compile_options(${TARGET}
   PRIVATE -O2 -g3 -finline-functions -std=c++20

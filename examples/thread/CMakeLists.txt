@@ -23,11 +23,15 @@ add_executable(${TARGET}  ${EXAMPLE_TARGET_SOURCES})
 target_link_directories(${TARGET}
   PUBLIC ${MULT_LIB_OUT_DIR}
   )
-#
-# link libraries このセクションは必ずadd_executableマクロの後ろに記述する必要有り
 target_link_libraries(${TARGET}
-  PUBLIC ${MULT_BASE_LIB}
+  PRIVATE "-pthread"
   )
+
+# #
+# # link libraries このセクションは必ずadd_executableマクロの後ろに記述する必要有り
+# target_link_libraries(${TARGET}
+#   PUBLIC ${MULT_BASE_LIB}
+#   )
 #
 # include files
 target_include_directories(${TARGET}
@@ -35,3 +39,11 @@ target_include_directories(${TARGET}
   PRIVATE ${TOOLS_TESTER_BASE}
   PUBLIC  ${MULT_INCLUDE_BASE}
   )
+
+target_compile_options(${TARGET}
+  PRIVATE -O2 -g3 -finline-functions -pthread
+  PRIVATE -Wall -Wextra -W -Wctor-dtor-privacy -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wreorder
+  PRIVATE -DMULT_DEBUG -DMULT_ASSERT_CHECK -DMULT_ASSERT_OK -DMULT_TRACE
+  )
+target_compile_features(${TARGET} PRIVATE cxx_std_20)
+

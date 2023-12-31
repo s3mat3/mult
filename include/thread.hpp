@@ -19,7 +19,7 @@
 # include <thread>
 
 # include "base.hpp"
-# include "internal/logger.hpp"
+# include "debug.hpp"
 
 namespace Mult{
     /**  Runnable Interface class.
@@ -66,14 +66,14 @@ namespace Mult{
             if (m_instance && m_entrypoint) {
                 (*m_instance.*m_entrypoint)(vp);
             } else {
-                MULTFatal("=====> Hasn't runnable entrypoint object");
+                MULT_FATAL("=====> Hasn't runnable entrypoint object");
             }
         }
 
         virtual void stop() noexcept override
         {
             m_instance->stop();
-            MULTDebug("stoped");
+            MULT_LOG("stoped");
         }
 
         void attach(instance_p obj, entrypoint_t entrypoint)
@@ -137,9 +137,9 @@ namespace Mult{
         ~Thread() noexcept
         {
             auto c = this->join();
-            MULTDebug(name() + " Thread object deleting : " + std::to_string(c));
+            MULT_LOG(name() + " Thread object deleting : " + std::to_string(c));
             m_thread.reset();
-            MULTDebug(name() + "::~Thread");
+            MULT_LOG(name() + "::~Thread");
         }
         /*! start threading
          *
@@ -155,11 +155,11 @@ namespace Mult{
             return_code ret = NO_RESOURCE;
             if (m_runnable) {
                 m_started = true;
-                MULTDebug(name() + " start thread");
+                MULT_LOG(name() + " start thread");
                 m_thread.reset(new std::thread([this,vp]{m_runnable->run(vp);}));
                 return OK;
             } else {
-                MULTFatal("=====> No setup Runnable object < " + name());
+                MULT_LOG("=====> No setup Runnable object < " + name());
                 return ret; // NO_RESOURCE
             }
             return ret; // but naver here.
@@ -186,23 +186,23 @@ namespace Mult{
          *  \retval FAILURE maybe already joined
          *  \retval FAIL_JOIN when catch std::system_error or other
          */
-        auto join() noexcept -> decltype(Mult::OK)
+        auto join() noexcept -> return_code
         {
             if (m_thread->joinable() && m_started) {
                 try {
                     m_started = false;
                     m_thread->join();
                 } catch (std::system_error& e) {
-                    MULTFatal(name() + " =====> fail join : " + e.what());
+                    MULT_FATAL(name() + " =====> fail join : " + e.what());
                     return FAIL_JOIN;
                 } catch (...) {
-                    MULTFatal(name() + " =====> fail join : Catch unknown EXCEPTION");
+                    MULT_FATAL(name() + " =====> fail join : Catch unknown EXCEPTION");
                     return FAIL_JOIN;
                 }
-                MULTInfo(name() + " => Joined thread");
+                MULT_INFO(name() + " => Joined thread");
                 return OK;
             } else {
-                MULTDebug(name() + " is No joinable maybe alrady joined OR **Not RUN**" );
+                MULT_LOG(name() + " is No joinable maybe alrady joined OR **Not RUN**" );
                 return FAILURE;
             }
             return OK; // maybe never here.

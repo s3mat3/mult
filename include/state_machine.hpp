@@ -31,6 +31,7 @@
 # include <unordered_map>
 # include <memory>
 # include "base.hpp"
+# include "debug.hpp"
 # include "event.hpp"
 
 namespace Mult {
@@ -81,18 +82,18 @@ namespace Mult {
         virtual state_ptr next(event_type id) noexcept
         {
             state_ptr ret;
-            MULTDebug("Next index is " + std::to_string(id));
+            MULT_LOG("Next index is " + std::to_string(id));
             try {
                 if (! m_destination.at(id).expired()) {
                     ret = m_destination.at(id).lock();
                 } else {
-                    MULTFatal("======> State pointer is Expired!!");
+                    MULT_FATAL("======> State pointer is Expired!!");
                     return nullptr;
                 }
             } catch (const std::out_of_range& e) {
-                MULTFatal("=====> We have not next state => " + std::string(e.what()));
+                MULT_FATAL("=====> We have not next state => " + std::string(e.what()));
             } catch (...) {
-                MULTFatal("=====> We have not next state =====> No more info!!");
+                MULT_FATAL("=====> We have not next state =====> No more info!!");
             }
             return ret;
         }
@@ -154,16 +155,16 @@ namespace Mult {
             if (m_current) {
                 auto next = m_current->exit(id); // exit function
                 if (next && (next != m_pseudo_stop)) {
-                    MULTDebug("**Change state** from " + m_current->name() + " to " + next->name() + " by event id = " + std::to_string(id));
+                    MULT_LOG("**Change state** from " + m_current->name() + " to " + next->name() + " by event id = " + std::to_string(id));
                     m_current = next;
                 } else {
-                    MULTInfo("=> Detect pseudo_stop or null STATE return to FALSE");
+                    MULT_INFO("=> Detect pseudo_stop or null STATE return to FALSE");
                     return false; // next is nullptr OR m_stop
                 }
                 m_current->entry();      // entry function
                 m_current->doActivity(); // do function
             } else {
-                MULTFatal("=====> No current state");
+                MULT_FATAL("=====> No current state");
                 return false;
             }
             return true;

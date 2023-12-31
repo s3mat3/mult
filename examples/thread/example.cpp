@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-#include "logger.hpp"
+#include "debug.hpp"
 #include "thread.hpp"
 
 class Some
@@ -26,7 +26,7 @@ public:
         size_t l = 0;
         while(run) {
             std::string hello(__FUNCTION__);
-            DebugLog("Hello " +  hello + std::to_string(l++));
+            MULT_LOG("Hello " +  hello + std::to_string(l++));
             Mult::Thread::sleep(100);
             if (l > 20) break;
         }
@@ -36,7 +36,7 @@ public:
         size_t l = 0;
         while(run) {
             std::string hello(__FUNCTION__);
-            DebugLog("Fugoo " +  hello + std::to_string(l++));
+            MULT_LOG("Fugoo " +  hello + std::to_string(l++));
             Mult::Thread::sleep(100);
             if (l > 20) break;
         }
@@ -47,10 +47,8 @@ private:
 
 int main()
 {
-    MULTLoggerInternalLevel(Mult::LogLevel::debug);
-    MULTLoggerLevel(Mult::LogLevel::debug);
     using runnable_t = Mult::RunnableAdapter<Some>;
-    using runnable_p = std::shared_ptr<runnable_t>();
+    //using runnable_p = std::shared_ptr<runnable_t>();
     auto runner1 = std::make_shared<runnable_t>(std::make_shared<Some>(), &Some::function1);
     auto runner2 = std::make_shared<runnable_t>(std::make_shared<Some>(), &Some::function2);
     Mult::Thread th1(runner1, "TH1");

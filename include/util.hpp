@@ -37,7 +37,7 @@ namespace Mult {
      *
      *  Normal function version
      */
-    std::string removePath(const std::string& target, char del = '/')
+    inline std::string removePath(const std::string& target, char del = '/')
     {
         auto pos = target.find_last_of(del);
         if (pos != std::string::npos) {
@@ -51,7 +51,7 @@ namespace Mult {
      * \note Only POSIX, precision microseconds
      */
     // [[deprecated("Please using another function!! This is only POSIX system")]]
-    std::string getCurrentTime()
+    inline std::string getCurrentTime()
     {
         std::string buf;
         std::string timeStampFormat = "0000-00-00T00:00:00"; // iso8601 style
@@ -75,7 +75,7 @@ namespace Mult {
      *
      * debian/gccでの起動開始はOSの起動開始をepochとしている様だ、他の環境だともしかすると対象アプリの起動をepochとしているかも(大した問題ではない)
      */
-    auto getElapsedTime() -> std::time_t
+    inline auto getElapsedTime() -> std::time_t
     {
         using namespace std::chrono;
         return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count();
@@ -89,14 +89,14 @@ namespace Mult {
      *  \param[in] col 桁数 デフォルトは16桁 
      *  \retval N桁右詰め0パディングの文字列
      */
-    auto convertTime_tToStr(std::time_t target, size_t fill=16) -> std::string
+    inline auto convertTime_tToStr(std::time_t target, size_t fill=16) -> std::string
     {
         std::stringstream time_stream;
         time_stream << std::setw(fill) << std::setfill('0') << target;
         return time_stream.str();
     }
 
-    auto system_error(int err) -> std::string
+    inline auto system_error(int err) -> std::string
     {
         std::string cause;
         cause.assign(::strerror_r(err, cause.data(), 128));

@@ -21,7 +21,7 @@
 # include <functional>
 # include <memory>
 
-# include "internal/logger.hpp"
+# include "debug.hpp"
 
 /*!
  * \def MULT_ARGC
@@ -114,12 +114,12 @@ namespace Mult {
                 try {
                     ret = cb(args...);
                 } catch (std::bad_function_call& e) { // 多分ここでcatchされるとコールバックのスコープが無いって事だと思う
-                    MULTFatal("=====> Occure Exception std::bad_function_call");
+                    MULT_FATAL("=====> Occure Exception std::bad_function_call");
                 } catch (...) {
-                    MULTFatal("=====> Occure Exception!! What huppen???");
+                    MULT_FATAL("=====> Occure Exception!! What huppen???");
                 }
             } else {
-                MULTError("====> Notification :: No assignment receiver function(no callback)!! please setup me!!");
+                MULT_ERROR("====> Notification :: No assignment receiver function(no callback)!! please setup me!!");
             }
             return ret;
         }
@@ -167,7 +167,7 @@ namespace Mult {
     }
 
     /*! Notification connect helper function
-     *  
+     *
      *  \tparam C Class to receive event (class which defined callback)
      *  \tparam T Member function (callback) that receives an event of class C
      *  \tparam ...A Argument type of notify function of Notification class of connection source
@@ -185,7 +185,7 @@ namespace Mult {
     }
 
     /*! Notification connect helper function
-     *  
+     *
      *  \tparam C Class to receive event (class which defined callback)
      *  \tparam T Member function (callback) that receives an event of class C
      *  \tparam ...A Argument type of notify function of Notification class of connection source
@@ -203,7 +203,7 @@ namespace Mult {
     }
 
     /*! Notification connect helper function
-     *  
+     *
      *  \tparam C Class to receive event (class which defined callback)
      *  \tparam T Member function (callback) that receives an event of class C
      *  \tparam ...A Argument type of notify function of Notification class of connection source
@@ -220,7 +220,7 @@ namespace Mult {
         n->connect(obj, mf, a...);
     }
 
-/*! \class Notification 
+/*! \class Notification
  *
  * Usage
 \code
@@ -307,17 +307,6 @@ int main()
     return 0;
 }
 \endcode
-\verbatim
-0000004237012830 (APP ) [140132747589376]  [Debug ]: notify function116 example.cpp in 29
-0000004237012954 (APP ) [140132747589376]  [Debug ]: 17 get from Caller example.cpp in 63
-0000004237012985 (APP ) [140132747589376]  [Debug ]: function116 example.cpp in 69
-0000004237113334 (APP ) [140132747589376]  [Debug ]: notify function117 example.cpp in 29
-0000004237113433 (APP ) [140132747589376]  [Debug ]: 18 get from Caller example.cpp in 63
-0000004237113463 (APP ) [140132747589376]  [Debug ]: function117 example.cpp in 69
-0000004237213620 (APP ) [140132747589376]  [Debug ]: notify function118 example.cpp in 29
-0000004237213746 (APP ) [140132747589376]  [Debug ]: 19 get from Caller example.cpp in 63
-0000004237213808 (APP ) [140132747589376]  [Debug ]: function118 example.cpp in 
-\endverbatim
 */
 
 

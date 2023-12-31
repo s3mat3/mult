@@ -16,7 +16,6 @@
 # define  SIGNAL_MACHINE_Hpp
 
 # include "event.hpp"
-# include "logger.hpp"
 # include "state_machine.hpp"
 
 class TrafficSignalController;
@@ -38,7 +37,7 @@ public:
         m_tbl[SignalEvent::start]   = "start";
         m_tbl[SignalEvent::stop]    = "stop";
         m_tbl[SignalEvent::timeout] = "change";
-        DebugLog("SignalEvent()");
+        MULT_LOG("SignalEvent()");
     }
     virtual ~SignalEvent() = default;
     const std::string to_string() override

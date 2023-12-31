@@ -16,7 +16,7 @@
 # define  SIGNAL_CONTROLLER_Hpp
 
 # include <memory>
-# include "logger.hpp"
+# include "debug.hpp"
 # include "event.hpp"
 # include "mult.hpp"
 

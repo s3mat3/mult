@@ -17,12 +17,12 @@ Yellow::Yellow(event_type id, const std::string& name, context_ptr ptr)
     : state_type(id, name, ptr)
     , m_waiter()
 {
-    DebugLog("****** Yellow() ******");
+    MULT_LOG("****** Yellow() ******");
 }
 Yellow::~Yellow()
 {
     m_waiter.cancel();
-    DebugLog("Destruct yellow state");
+    MULT_LOG("Destruct yellow state");
 }
 
 void Yellow::entry() noexcept
@@ -33,14 +33,14 @@ void Yellow::entry() noexcept
 void Yellow::doActivity() noexcept
 {
     try {
-        DebugLog("Yellow on");
-        auto to = m_waiter.wait_for(2000); //blocked wait
-        DebugLog("Yellow off");
+        MULT_LOG("Yellow on");
+        m_waiter.wait_for(2000); //blocked wait
+        MULT_LOG("Yellow off");
     } catch (const Mult::canceled_wait_event& e) {
         m_context->update(SignalEvent::timeout);
-        InfoLog("==> Canceled in " + std::string(__PRETTY_FUNCTION__));
+        MULT_INFO("==> Canceled in " + std::string(__PRETTY_FUNCTION__));
     } catch (...) {
-        FatalLog("====> What happen!! " + std::string(__PRETTY_FUNCTION__));
+        MULT_FATAL("====> What happen!! " + std::string(__PRETTY_FUNCTION__));
     }
     m_context->update(SignalEvent::timeout);
 }

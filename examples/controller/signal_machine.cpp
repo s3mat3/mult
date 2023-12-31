@@ -20,7 +20,7 @@ SignalMachine::SignalMachine(context_ptr ptr)
     , yellow(std::make_shared<Yellow> (3, "yello", ptr))
     , green(std::make_shared<Green>   (4, "green", ptr))
 {
-    DebugLog("StateMachine()");
+    MULT_LOG("StateMachine()");
     // addTransition(idle,  SignalEvent::start,   red);
     // addTransition(red,   SignalEvent::timeout, green);
     // addTransition(red,   SignalEvent::stop,    idle);
@@ -40,6 +40,6 @@ SignalMachine::SignalMachine(context_ptr ptr)
     addTransition(yellow, 3, red);
     addTransition(yellow, 2, idle);
     initial(idle);
-    DebugLog("current State name is " + name());
-    DebugLog("Done constructor StateMachine()");
+    MULT_LOG("current State name is " + name());
+    MULT_LOG("Done constructor StateMachine()");
 }

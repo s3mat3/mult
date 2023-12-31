@@ -136,13 +136,13 @@ if (MULT_BUILD_EXAMPLES)
     set(MULT_EXAMPLE_BASE ${MULT_BASE_DIR}/examples)
   endif()
   # examples output directories
-  # if(NOT (DEFINED MULT_EXAMPLE_OUT_DIR))
-  #   set(MULT_EXAMPLE_OUT_DIR ${PROJECT_BINARY_DIR}/mult/examples)
-  # endif()
-  # add_subdirectory(${MULT_EXAMPLE_BASE}/controller)
-  # add_subdirectory(${MULT_EXAMPLE_BASE}/logger)
-  # add_subdirectory(${MULT_EXAMPLE_BASE}/notification)
-  # add_subdirectory(${MULT_EXAMPLE_BASE}/thread)
+  if(NOT (DEFINED MULT_EXAMPLE_OUT_DIR))
+    set(MULT_EXAMPLE_OUT_DIR ${PROJECT_BINARY_DIR}/mult/examples)
+  endif()
+  add_subdirectory(${MULT_EXAMPLE_BASE}/debug)
+  add_subdirectory(${MULT_EXAMPLE_BASE}/thread)
+  add_subdirectory(${MULT_EXAMPLE_BASE}/notification)
+  add_subdirectory(${MULT_EXAMPLE_BASE}/controller)
 endif()
 ##############
 ### documents
@@ -152,9 +152,9 @@ if (MAKE_MULT_DOC)
 endif()
 
 set(MULT_BASE_LIB_SOURCES
-  ${MULT_SOURCE_BASE}/util.cpp
-  ${MULT_SOURCE_BASE}/internal/logger_internal_impl.cpp
   ${MULT_SOURCE_BASE}/mult.cpp
+#  ${MULT_SOURCE_BASE}/util.cpp
+#  ${MULT_SOURCE_BASE}/internal/logger_internal_impl.cpp
   )
 
 add_library(${MULT_BASE_LIB}
@@ -168,7 +168,7 @@ target_include_directories(${MULT_BASE_LIB}
   )
 
 target_link_libraries(${MULT_BASE_LIB}
-  PUBLIC "-pthread"
+  PRIVATE "-pthread"
   )
 target_compile_options(${MULT_BASE_LIB}
   PRIVATE -Wall -W -Wctor-dtor-privacy -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual

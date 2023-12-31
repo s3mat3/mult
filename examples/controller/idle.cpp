@@ -16,12 +16,12 @@
 Idle::Idle(event_type id, const std::string& name, context_ptr ptr)
                 : state_type(id, name, ptr)
 {
-    DebugLog("****** Idle() ******");
+    MULT_LOG("****** Idle() ******");
 }
 
 Idle::~Idle()
 {
-    DebugLog("Destruct Idle");
+    MULT_LOG("Destruct Idle");
 }
 
 void Idle::entry() noexcept
@@ -32,7 +32,7 @@ void Idle::entry() noexcept
 }
 void Idle::doActivity() noexcept
 {
-    DebugLog("***** Idle::do *****");
+    MULT_LOG("***** Idle::do *****");
 }
 SignalMachine::state_ptr Idle::exit(SignalMachine::event_type id) noexcept
 {

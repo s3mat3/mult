@@ -17,7 +17,6 @@ TrafficSignalController::TrafficSignalController()
     : m_ptr(std::make_shared<SignalMachine>(this))
     , m_event(0)
 {
-    DebugLog(std::to_string(m_event));
 }
 
 TrafficSignalController::~TrafficSignalController() {}
@@ -36,13 +35,13 @@ void TrafficSignalController::turn(Mult::LogicCode l, Device d)
     case GreenBuble: msg.append("GREEN"); break;
     default: msg.append("What???");
     }
-    DebugLog(msg);
+    MULT_LOG(msg);
 }
 
 bool TrafficSignalController::update(Mult::Event::id_t event)
 {
     m_event = event;
-    DebugLog("Update to " + std::to_string(m_event));
+    MULT_LOG("Update to " + std::to_string(m_event));
     return true;
 }
 
@@ -54,8 +53,8 @@ void TrafficSignalController::dispatch([[maybe_unused]]void *ptr)
         if (++y == 3) update(1);
         if (y == 10) update(2);
         if (y == 12) update(4);
-        DebugLog("----- Change STATE -----");
+        MULT_LOG("----- Change STATE -----");
         x = m_ptr->onAnyEvent(m_event);
-        DebugLog("----- Change STATE done -----" + std::to_string(y));
+        MULT_LOG("----- Change STATE done -----" + std::to_string(y));
     }
 }

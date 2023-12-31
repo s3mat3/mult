@@ -192,7 +192,7 @@ namespace Mult {
          *  \retval string from variable value.
          */
         template <typename T>
-        std::string dump_var_simple(T v)
+        inline std::string dump_var_simple(T v)
         {
             if constexpr (is_string_v<T>) {
                 return v;
@@ -421,8 +421,7 @@ namespace Mult {
                << fname
                << " at "
                << std::to_string(line)
-               << MULT_SGR_RESET
-               << std::endl;
+               << MULT_SGR_RESET;
             return ss.str();
         }
         inline auto message(const std::string& body, const std::string_view& fname, int line)
@@ -455,8 +454,7 @@ namespace Mult {
                << file
                << " at "
                << std::to_string(line)
-               << " <==== marK *****"
-               << std::endl;
+               << " <==== marK *****";
             return ss.str();
         }
         /**  .
@@ -464,7 +462,7 @@ namespace Mult {
          *
          */
         template <typename T>
-        auto size_gap(T head, T tail, const char* hvar, const char* tvar, bool disp = true) -> const std::string
+        inline auto size_gap(T head, T tail, const char* hvar, const char* tvar, bool disp = true) -> const std::string
         {
             decltype(head) h = nullptr;
             decltype(head) t = nullptr;

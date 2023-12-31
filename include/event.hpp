@@ -17,7 +17,8 @@
 
 # include <mutex>
 # include "code.hpp"
-# include "internal/logger.hpp"
+# include "debug.hpp"
+
 namespace Mult {
     /**  Event class.
      *
@@ -40,17 +41,14 @@ namespace Mult {
             : m_current(Event::void_event)
             , m_guard()
         {
-            MULTDebug("Event base construct");
         }
 
         virtual ~Event()
         {
-            MULTDebug("~Event() process start");
             std::unique_lock<std::mutex> checker(m_guard, std::defer_lock);
             if (checker) {
                 m_guard.unlock();
             }
-            MULTDebug("~Event and unlock");
         }
 
         /** Event writer with lock.
@@ -59,13 +57,11 @@ namespace Mult {
          */
         virtual void write(id_t newEvent) noexcept
         {
-            MULTDebug("> Write new event");
             try {
                 //std::lock_guard<std::mutex> lock(m_guard);
                 m_current = newEvent;
-                MULTDebug("> Write done!!!!!!");
             } catch (...) {
-                MULTDebug("> Detect lock exception");
+                MULT_LOG("> Detect lock exception");
             }
         }
 

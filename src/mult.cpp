@@ -11,15 +11,15 @@
  */
 
 
-#include "mult.hpp"
+// #include "mult.hpp"
 
-#include "internal/logger_internal_impl.hpp"
+// #include "internal/logger_internal_impl.hpp"
 
-MULT_NAMESPACE_BEGIN
+// MULT_NAMESPACE_BEGIN
 
-namespace Internal {
-    Logger MultGlobalLoggerInstance(LogLevel::debug);
-    Logger MultGlobalLoggerInternalInstance(LogLevel::debug);
-}
+// namespace Internal {
+//     Logger MultGlobalLoggerInstance(LogLevel::debug);
+//     Logger MultGlobalLoggerInternalInstance(LogLevel::debug);
+// }
 
-MULT_NAMESPACE_END
+// MULT_NAMESPACE_END

@@ -17,13 +17,13 @@ Red::Red(event_type id, const std::string& name, context_ptr ptr)
     : state_type(id, name, ptr)
     , m_waiter()
 {
-    DebugLog("****** Red() ******");
+    MULT_LOG("****** Red() ******");
 }
 
 Red::~Red()
 {
     m_waiter.cancel();
-    DebugLog("Destruct Red");
+    MULT_LOG("Destruct Red");
 }
 void Red::entry() noexcept
 {
@@ -33,14 +33,14 @@ void Red::entry() noexcept
 void Red::doActivity() noexcept
 {
     try {
-        DebugLog("Red on");
-        auto to = m_waiter.wait_for(3000); //blocked wait
-        DebugLog("Red off");
+        MULT_LOG("Red on");
+        m_waiter.wait_for(3000); //blocked wait
+        MULT_LOG("Red off");
     } catch (const Mult::canceled_wait_event& e) {
         m_context->update(SignalEvent::timeout);
-        InfoLog("==> Canceled in " + std::string(__PRETTY_FUNCTION__));
+        MULT_INFO("==> Canceled in " + std::string(__PRETTY_FUNCTION__));
     } catch (...) {
-        FatalLog("====> What happen!! " + std::string(__PRETTY_FUNCTION__));
+        MULT_FATAL("====> What happen!! " + std::string(__PRETTY_FUNCTION__));
     }
     m_context->update(SignalEvent::timeout);
 }

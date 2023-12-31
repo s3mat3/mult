@@ -15,15 +15,8 @@
 
 Green::Green(event_type id, const std::string& name, context_ptr ptr)
     : state_type(id, name, ptr)
-    , m_waiter()
-{
-    DebugLog("****** Green() ******");
-}
-Green::~Green()
-{
-    m_waiter.cancel();
-    DebugLog("Destruct green state");
-}
+    , m_waiter() {}
+Green::~Green() { m_waiter.cancel(); }
 
 void Green::entry() noexcept
 {
@@ -32,14 +25,14 @@ void Green::entry() noexcept
 void Green::doActivity() noexcept
 {
     try {
-        DebugLog("Green on");
-        auto to = m_waiter.wait_for(3000); //blocked wait
-        DebugLog("Green off");
+        MULT_LOG("Green on");
+        m_waiter.wait_for(3000); //blocked wait
+        MULT_LOG("Green off");
     } catch (const Mult::canceled_wait_event& e) {
         m_context->update(SignalEvent::timeout);
-        InfoLog("==> Canceled in " + std::string(__PRETTY_FUNCTION__));
+        MULT_INFO("==> Canceled in " + std::string(__PRETTY_FUNCTION__));
     } catch (...) {
-        FatalLog("====> What happen!! " + std::string(__PRETTY_FUNCTION__));
+        MULT_FATAL("====> What happen!! " + std::string(__PRETTY_FUNCTION__));
     }
     m_context->update(SignalEvent::timeout);
 }
